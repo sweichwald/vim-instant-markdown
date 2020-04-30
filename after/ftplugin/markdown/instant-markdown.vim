@@ -7,22 +7,6 @@ if !exists('g:instant_markdown_autostart')
     let g:instant_markdown_autostart = 1
 endif
 
-if !exists('g:instant_markdown_open_to_the_world')
-    let g:instant_markdown_open_to_the_world = 0
-endif
-
-if !exists('g:instant_markdown_allow_unsafe_content')
-    let g:instant_markdown_allow_unsafe_content = 0
-endif
-
-if !exists('g:instant_markdown_allow_external_content')
-    let g:instant_markdown_allow_external_content = 1
-endif
-
-if !exists('g:instant_markdown_mathjax')
-    let g:instant_markdown_mathjax = 0
-endif
-
 if !exists('g:instant_markdown_logfile')
     let g:instant_markdown_logfile = (has('win32') || has('win64') ? 'NUL' : '/dev/null')
 elseif filereadable(g:instant_markdown_logfile)
@@ -38,9 +22,6 @@ if !exists('g:instant_markdown_port')
     let g:instant_markdown_port = 8090
 endif
 
-if !exists('g:instant_markdown_python')
-    let g:instant_markdown_python = 0
-endif
 
 
 " # Utility Functions
@@ -98,30 +79,8 @@ endfu
 function! s:startDaemon(initialMDLines)
     let env = ''
     let argv = ''
-    if !g:instant_markdown_python
-        if g:instant_markdown_open_to_the_world
-            let env .= 'INSTANT_MARKDOWN_OPEN_TO_THE_WORLD=1 '
-        endif
-        if g:instant_markdown_allow_unsafe_content
-            let env .= 'INSTANT_MARKDOWN_ALLOW_UNSAFE_CONTENT=1 '
-        endif
-        if !g:instant_markdown_allow_external_content
-            let env .= 'INSTANT_MARKDOWN_BLOCK_EXTERNAL=1 '
-        endif
-        if g:instant_markdown_mathjax
-            let argv .= ' --mathjax'
-        endif
-    endif
-    if exists('g:instant_markdown_browser')
-        let argv .= " --browser '".g:instant_markdown_browser."'"
-    endif
     let argv .= ' --port '.g:instant_markdown_port
-
-    if g:instant_markdown_python
-        call s:systemasync(env.'smdv --stdin'.argv, a:initialMDLines)
-    else
-        call s:systemasync(env.'instant-markdown-d'.argv, a:initialMDLines)
-    endif
+    call s:systemasync(env.'smdv -B'.argv, a:initialMDLines)
 endfu
 
 function! s:initDict()
@@ -152,8 +111,8 @@ function! s:bufGetLines(bufnr)
     let row_num = max([0, line(".") - 5])
     let lines[row_num] = join([lines[row_num], '<a name="#marker" id="marker"></a>'], ' ')
   endif
-
-  return lines
+  " prepend directory of active file
+  return [ "cwd:".expand('%:h')."\n" ] + lines
 endfu
 
 " I really, really hope there's a better way to do this.
