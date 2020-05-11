@@ -7,25 +7,17 @@ if !exists('g:instant_markdown_autostart')
     let g:instant_markdown_autostart = 1
 endif
 
-if !exists('g:instant_markdown_logfile')
-    let g:instant_markdown_logfile = (has('win32') || has('win64') ? 'NUL' : '/dev/null')
-elseif filereadable(g:instant_markdown_logfile)
-    "Truncate the log file
-    call writefile([''], g:instant_markdown_logfile)
-endif
-
-if !exists('g:instant_markdown_autoscroll')
-    let g:instant_markdown_autoscroll = 1
+if !exists('g:instant_markdown_autostop')
+    let g:instant_markdown_autostop = 0
 endif
 
 if !exists('g:instant_markdown_port')
-    let g:instant_markdown_port = 8090
+    let g:instant_markdown_port = 9877
 endif
 
 
 
 " # Utility Functions
-let s:shell_redirect = ' 1>> '. g:instant_markdown_logfile . ' 2>&1 '
 " Simple system wrapper that ignores empty second args
 function! s:system(cmd, stdin)
     if strlen(a:stdin) == 0
@@ -39,7 +31,7 @@ endfu
 " redirect output in a cross-platform way. Note that stdin must be passed as a
 " List of lines.
 function! s:systemasync(cmd, stdinLines)
-    let cmd = a:cmd . s:shell_redirect
+    let cmd = a:cmd
     if has('win32') || has('win64')
         call s:winasync(cmd, a:stdinLines)
     elseif has('nvim')
@@ -72,15 +64,13 @@ endfu
 
 function! s:refreshView()
     let bufnr = expand('<bufnr>')
-    call s:systemasync("curl -X PUT -T - http://localhost:".g:instant_markdown_port,
+    call s:systemasync("cat - >$XDG_RUNTIME_DIR/pmpm_pipe ",
                 \ s:bufGetLines(bufnr))
 endfu
 
 function! s:startDaemon(initialMDLines)
-    let env = ''
-    let argv = ''
-    let argv .= ' --port '.g:instant_markdown_port
-    call s:systemasync(env.'smdv -B'.argv, a:initialMDLines)
+    let argv = ' --port '.g:instant_markdown_port
+    call s:systemasync('pmpm --start'.argv, a:initialMDLines)
 endfu
 
 function! s:initDict()
@@ -100,19 +90,16 @@ function! s:popBuffer(bufnr)
 endfu
 
 function! s:killDaemon()
-    call s:systemasync("curl -X DELETE -w 'exit status: %{http_code}' http://localhost:".g:instant_markdown_port, [])
+    if g:instant_markdown_autostop
+        let argv = ' --port '.g:instant_markdown_port
+        call s:systemasync('pmpm --stop'.argv, [])
+    endif
 endfu
 
 function! s:bufGetLines(bufnr)
   let lines = getbufline(a:bufnr, 1, "$")
-
-  if g:instant_markdown_autoscroll
-    " inject row marker
-    let row_num = max([0, line(".") - 5])
-    let lines[row_num] = join([lines[row_num], '<a name="#marker" id="marker"></a>'], ' ')
-  endif
   " prepend directory of active file
-  return [ "cwd:".expand('%:h')."\n" ] + lines
+  return [ "<!-- filepath:".expand('%:p')." -->" ] + lines
 endfu
 
 " I really, really hope there's a better way to do this.
@@ -196,5 +183,5 @@ if g:instant_markdown_autostart
     aug END
 endif
 
-command! -buffer InstantMarkdownPreview call s:previewMarkdown()
+command! -buffer InstantMarkdownStart call s:previewMarkdown()
 command! -buffer InstantMarkdownStop call s:cleanUp()
