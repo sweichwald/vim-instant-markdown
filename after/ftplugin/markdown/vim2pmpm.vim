@@ -1,18 +1,18 @@
 " # Configuration
-if !exists('g:instant_markdown_slow')
-    let g:instant_markdown_slow = 0
+if !exists('g:pmpm_slow')
+    let g:pmpm_slow = 0
 endif
 
-if !exists('g:instant_markdown_autostart')
-    let g:instant_markdown_autostart = 1
+if !exists('g:pmpm_autostart')
+    let g:pmpm_autostart = 1
 endif
 
-if !exists('g:instant_markdown_autostop')
-    let g:instant_markdown_autostop = 0
+if !exists('g:pmpm_autostop')
+    let g:pmpm_autostop = 0
 endif
 
-if !exists('g:instant_markdown_port')
-    let g:instant_markdown_port = 9877
+if !exists('g:pmpm_port')
+    let g:pmpm_port = 9877
 endif
 
 
@@ -69,7 +69,7 @@ function! s:refreshView()
 endfu
 
 function! s:startDaemon(initialMDLines)
-    let argv = ' --port '.g:instant_markdown_port
+    let argv = ' --port '.g:pmpm_port
     call s:systemasync('pmpm --start'.argv, a:initialMDLines)
 endfu
 
@@ -89,11 +89,17 @@ function! s:popBuffer(bufnr)
     call remove(s:buffers, a:bufnr)
 endfu
 
-function! s:killDaemon()
-    if g:instant_markdown_autostop
-        let argv = ' --port '.g:instant_markdown_port
+function! s:killDaemonAuto()
+    if g:pmpm_autostop
+        let argv = ' --port '.g:pmpm_port
         call s:systemasync('pmpm --stop'.argv, [])
     endif
+endfu
+
+function! s:stop()
+    let argv = ' --port '.g:pmpm_port
+    call s:systemasync('pmpm --stop'.argv, [])
+    au! vim2pmpm * <buffer>
 endfu
 
 function! s:bufGetLines(bufnr)
@@ -132,10 +138,10 @@ endfu
 "     * autocmds
 fu! s:popMarkdown()
     let bufnr = s:myBufNr()
-    silent au! instant-markdown * <buffer=abuf>
+    silent au! vim2pmpm * <buffer=abuf>
     call s:popBuffer(bufnr)
     if len(s:buffers) == 0
-        call s:killDaemon()
+        call s:killDaemonAuto()
     endif
 endfu
 
@@ -153,8 +159,8 @@ endfu
 
 fu! s:previewMarkdown()
   call s:startDaemon(getline(1, '$'))
-  aug instant-markdown
-    if g:instant_markdown_slow
+  aug vim2pmpm
+    if g:pmpm_slow
       au CursorHold,BufWrite,InsertLeave <buffer> call s:temperedRefresh()
     else
       au CursorHold,CursorHoldI,CursorMoved,CursorMovedI <buffer> call s:temperedRefresh()
@@ -164,16 +170,16 @@ fu! s:previewMarkdown()
 endfu
 
 fu! s:cleanUp()
-  call s:killDaemon()
-  au! instant-markdown * <buffer>
+  call s:killDaemonAuto()
+  au! vim2pmpm * <buffer>
 endfu
 
-if g:instant_markdown_autostart
+if g:pmpm_autostart
     " # Define the autocmds "
-    aug instant-markdown
+    aug vim2pmpm
         au! * <buffer>
         au BufEnter <buffer> call s:refreshView()
-        if g:instant_markdown_slow
+        if g:pmpm_slow
           au CursorHold,BufWrite,InsertLeave <buffer> call s:temperedRefresh()
         else
           au CursorHold,CursorHoldI,CursorMoved,CursorMovedI <buffer> call s:temperedRefresh()
@@ -183,5 +189,5 @@ if g:instant_markdown_autostart
     aug END
 endif
 
-command! -buffer InstantMarkdownStart call s:previewMarkdown()
-command! -buffer InstantMarkdownStop call s:cleanUp()
+command! -buffer PMPMStart call s:previewMarkdown()
+command! -buffer PMPMStop call s:stop()

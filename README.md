@@ -1,4 +1,4 @@
-# vim-instant-markdown for [pmpm][pmpm]
+# vim2pmpm: markdown preview for vim using [pmpm][pmpm]
 
 
 
@@ -22,9 +22,9 @@ b) dropping support for and reference to the Node.js markdown preview server in 
 
 
 
-# vim-instant-markdown for [pmpm][pmpm]
+# vim2pmpm: markdown preview for vim using [pmpm][pmpm]
 
-Pipe to [pmpm][pmpm], which serves an html preview of the active buffer's markdown.
+Pipes to [pmpm][pmpm], which serves an html preview of the active buffer's markdown.
 
 ## Installation
 
@@ -33,54 +33,54 @@ Pipe to [pmpm][pmpm], which serves an html preview of the active buffer's markdo
 - For [vim-plug][plug], add the following to your `.vimrc`:
 
     ``` vim
-    Plug 'sweichwald/vim-instant-markdown', {'for': 'markdown'}
+    Plug 'sweichwald/vim2pmpm', {'for': 'markdown'}
     filetype plugin on
     ```
 
 - Configuration (defaults shown below):
 
     ``` vim
-    "let g:instant_markdown_slow = 0
-    "let g:instant_markdown_autostart = 1
-    "let g:instant_markdown_autostop = 0
-    "let g:instant_markdown_port = 9877
+    "let g:pmpm_slow = 0
+    "let g:pmpm_autostart = 1
+    "let g:pmpm_autostop = 0
+    "let g:pmpm_port = 9877
     ```
 
 ## Configuration
 
-### g:instant_markdown_slow
+### g:pmpm_slow
 
-By default, vim-instant-markdown will update the display in realtime.  If that taxes your system too much, you can specify
+By default, vim2pmpm will update the display in realtime.  If that taxes your system too much, you can specify
 
 ``` vim
-let g:instant_markdown_slow = 1
+let g:pmpm_slow = 1
 ```
 
-before loading the plugin (for example place that in your `~/.vimrc`). This will cause vim-instant-markdown to only refresh on the following events:
+before loading the plugin (for example place that in your `~/.vimrc`). This will cause vim2pmpm to only refresh on the following events:
 
 - No keys have been pressed for a while
 - A while after you leave insert mode
 - You save the file being edited
 
-### g:instant_markdown_autostart / -stop
+### g:pmpm_autostart / -stop
 
-By default, vim-instant-markdown will automatically launch (and not automatically close) the preview server when you open (or close, respectively) a markdown file. If you want to manually control this behavior, you can specify
+By default, vim2pmpm will automatically launch (and not automatically close) the preview server when you open (or close, respectively) a markdown file. If you want to manually control this behavior, you can specify
 
 ``` vim
-let g:instant_markdown_autostart = 0
-let g:instant_markdown_autostop = 1
+let g:pmpm_autostart = 0
+let g:pmpm_autostop = 1
 ```
 
 in your .vimrc. You can always manually trigger preview via the command
-`:InstantMarkdownPreview` and stop it via `:InstantMarkdownStop`.
+`:PMPMStart` and stop it via `:PMPMStop`.
 
 
-### g:instant_markdown_port
+### g:pmpm_port
 
 Choose a custom port for the [pmpm][pmpm] websocket server instead of the default `9877`.
 
 ``` vim
-let g:instant_markdown_port = 9877
+let g:pmpm_port = 9877
 ```
 
 
