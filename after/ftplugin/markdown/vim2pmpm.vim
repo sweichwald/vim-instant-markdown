@@ -64,7 +64,7 @@ endfu
 
 function! s:refreshView()
     let bufnr = expand('<bufnr>')
-    call s:systemasync("cat - >$XDG_RUNTIME_DIR/pmpm_pipe ",
+    call s:systemasync("cat - >$XDG_RUNTIME_DIR/pmpm/pipe ",
                 \ s:bufGetLines(bufnr))
 endfu
 
