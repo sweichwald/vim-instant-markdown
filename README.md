@@ -50,7 +50,7 @@ Pipes to [pmpm][pmpm], which serves an html preview of the active buffer's markd
 
 ### g:pmpm_slow
 
-By default, vim2pmpm will update the display in realtime.  If that taxes your system too much, you can specify
+By default, vim2pmpm will update the display frequently.  If that taxes your system too much, you can specify
 
 ``` vim
 let g:pmpm_slow = 1

@@ -145,25 +145,39 @@ fu! s:popMarkdown()
     endif
 endfu
 
+let g:refreshTimerFast = 0
+let g:refreshTimerSlow = 0
+
 " ## Refresh if there's something new worth showing
 "
 " 'All things in moderation'
-fu! s:temperedRefresh()
+fu! s:temperedRefresh(dummy)
     if !exists('b:changedtickLast')
         let b:changedtickLast = b:changedtick
     elseif b:changedtickLast != b:changedtick
         let b:changedtickLast = b:changedtick
         call s:refreshView()
     endif
+    if a:dummy isnot 0
+        let g:refreshTimerSlow = 0
+    endif
+endfu
+
+fu! s:temperedRefreshPing()
+    " restart the fast timer
+    call timer_stop(g:refreshTimerFast)
+    let g:refreshTimerFast = timer_start(150, function('s:temperedRefresh'))
+    if g:refreshTimerSlow is 0
+        let g:refreshTimerSlow = timer_start(1000, function('s:temperedRefresh'))
+    endif
 endfu
 
 fu! s:previewMarkdown()
   call s:startDaemon(getline(1, '$'))
   aug vim2pmpm
-    if g:pmpm_slow
-      au CursorHold,BufWrite,InsertLeave <buffer> call s:temperedRefresh()
-    else
-      au CursorHold,CursorHoldI,CursorMoved,CursorMovedI <buffer> call s:temperedRefresh()
+    au CursorHold,CursorHoldI,BufWrite,InsertLeave <buffer> call s:temperedRefresh(0)
+    if !g:pmpm_slow
+      au CursorMoved,CursorMovedI <buffer> call s:temperedRefreshPing()
     endif
     au BufUnload <buffer> call s:cleanUp()
   aug END
@@ -179,10 +193,9 @@ if g:pmpm_autostart
     aug vim2pmpm
         au! * <buffer>
         au BufEnter <buffer> call s:refreshView()
-        if g:pmpm_slow
-          au CursorHold,BufWrite,InsertLeave <buffer> call s:temperedRefresh()
-        else
-          au CursorHold,CursorHoldI,CursorMoved,CursorMovedI <buffer> call s:temperedRefresh()
+        au CursorHold,CursorHoldI,BufWrite,InsertLeave <buffer> call s:temperedRefresh(0)
+        if !g:pmpm_slow
+          au CursorMoved,CursorMovedI <buffer> call s:temperedRefreshPing()
         endif
         au BufUnload <buffer> call s:popMarkdown()
         au BufWinEnter <buffer> call s:pushMarkdown()
