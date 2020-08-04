@@ -17,6 +17,9 @@ endif
 
 
 
+let g:pipe = expand("$XDG_RUNTIME_DIR/pmpm/pipe")
+
+
 " # Utility Functions
 " Simple system wrapper that ignores empty second args
 function! s:system(cmd, stdin)
@@ -64,8 +67,7 @@ endfu
 
 function! s:refreshView()
     let bufnr = expand('<bufnr>')
-    call s:systemasync("cat - >$XDG_RUNTIME_DIR/pmpm/pipe ",
-                \ s:bufGetLines(bufnr))
+    call writefile(s:bufGetLines(bufnr), g:pipe)
 endfu
 
 function! s:startDaemon(initialMDLines)
